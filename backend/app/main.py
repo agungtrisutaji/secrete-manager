@@ -14,6 +14,14 @@ from app.api.v1 import api_router
 from app.core.config import get_settings
 from app.db.database import init_db
 
+# Import all models so they are registered with SQLAlchemy Base
+from app.models import (  # noqa: F401
+    Organization, User, Role, UserRole, Team, TeamMember,
+    Vault, VaultItem, VaultItemVersion, ItemShare,
+    ApprovalRequest, ApprovalAction,
+    AuditLog, AccessReview, AccessReviewEntry,
+)
+
 settings = get_settings()
 
 # Configure structured logging
@@ -46,8 +54,11 @@ async def lifespan(app: FastAPI):
     
     # Initialize database (in development only - use Alembic in production)
     if settings.environment == "development":
-        await init_db()
-        logger.info("Database initialized")
+        try:
+            await init_db()
+            logger.info("Database initialized")
+        except Exception as e:
+            logger.error("Database initialization failed", error=str(e))
     
     yield
     
@@ -85,7 +96,9 @@ async def log_requests(request: Request, call_next):
     correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
     
     # Bind correlation ID to logger context
-    with structlog.contextvars.bind_contextvars(correlation_id=correlation_id):
+    structlog.contextvars.bind_contextvars(correlation_id=correlation_id)
+    
+    try:
         logger.info(
             "request_started",
             method=request.method,
@@ -106,6 +119,8 @@ async def log_requests(request: Request, call_next):
         response.headers["X-Correlation-ID"] = correlation_id
         
         return response
+    finally:
+        structlog.contextvars.unbind_contextvars("correlation_id")
 
 
 # Global exception handler

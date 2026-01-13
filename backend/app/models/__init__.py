@@ -1,7 +1,7 @@
 """Models module exports."""
 from app.models.user import Organization, User, Role, UserRole, Team, TeamMember
 from app.models.vault import Vault, VaultItem, VaultItemVersion, ItemShare
-from app.models.approval import ApprovalRequest, ApprovalAction
+from app.models.approval import ApprovalRequest, ApprovalAction, ApprovalStatus
 from app.models.audit import AuditLog, AccessReview, AccessReviewEntry
 
 __all__ = [
@@ -20,8 +20,10 @@ __all__ = [
     # Approval models
     "ApprovalRequest",
     "ApprovalAction",
+    "ApprovalStatus",
     # Audit models
     "AuditLog",
     "AccessReview",
     "AccessReviewEntry",
 ]
+

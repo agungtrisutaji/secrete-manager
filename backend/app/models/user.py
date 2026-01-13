@@ -102,7 +102,7 @@ class User(Base):
     
     # Relationships
     organization: Mapped["Organization"] = relationship(back_populates="users")
-    user_roles: Mapped[list["UserRole"]] = relationship(back_populates="user")
+    user_roles: Mapped[list["UserRole"]] = relationship(back_populates="user", foreign_keys="UserRole.user_id")
     team_memberships: Mapped[list["TeamMember"]] = relationship(back_populates="user")
     
     __table_args__ = (

@@ -69,7 +69,7 @@ class ApprovalRequest(Base):
     
     # Request details
     justification: Mapped[str] = mapped_column(Text, nullable=False)
-    metadata: Mapped[dict] = mapped_column(JSONB, default=dict)
+    request_metadata: Mapped[dict] = mapped_column(JSONB, default=dict)
     
     # Approval settings
     status: Mapped[str] = mapped_column(String(20), default=ApprovalStatus.PENDING)

@@ -183,7 +183,7 @@ class ApprovalCreateRequest(BaseModel):
     target_resource_type: str | None = None
     target_resource_id: UUID | None = None
     justification: str = Field(..., min_length=10, max_length=2000)
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    request_metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class ApprovalActionRequest(BaseModel):

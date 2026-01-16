@@ -3,6 +3,7 @@ from app.models.user import Organization, User, Role, UserRole, Team, TeamMember
 from app.models.vault import Vault, VaultItem, VaultItemVersion, ItemShare
 from app.models.approval import ApprovalRequest, ApprovalAction, ApprovalStatus
 from app.models.audit import AuditLog, AccessReview, AccessReviewEntry
+from app.models.permission import CategoryPermission, CredentialRole
 
 __all__ = [
     # User models
@@ -25,5 +26,9 @@ __all__ = [
     "AuditLog",
     "AccessReview",
     "AccessReviewEntry",
+    # Permission models
+    "CategoryPermission",
+    "CredentialRole",
 ]
+
 

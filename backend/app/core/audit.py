@@ -58,6 +58,8 @@ class AuditAction(str, Enum):
     USER_OFFBOARD = "admin.user.offboard"
     ROLE_ASSIGN = "admin.role.assign"
     ROLE_REVOKE = "admin.role.revoke"
+    PERMISSION_GRANT = "admin.permission.grant"
+    PERMISSION_REVOKE = "admin.permission.revoke"
     
     # Email integration
     EMAIL_RESET = "email.reset"

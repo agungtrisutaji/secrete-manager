@@ -200,6 +200,12 @@ export default function CredentialsPage() {
           </div>
           <div className="flex gap-4">
             <button
+              onClick={() => router.push('/credentials/admin')}
+              className="px-4 py-2 text-gray-300 hover:text-white"
+            >
+              ⚙️ Admin
+            </button>
+            <button
               onClick={() => router.push('/dashboard')}
               className="px-4 py-2 text-gray-300 hover:text-white"
             >

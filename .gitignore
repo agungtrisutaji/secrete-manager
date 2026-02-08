@@ -93,3 +93,5 @@ alembic/versions/*.pyc
 # Build artifacts
 *.tar.gz
 *.zip
+
+testsprite_tests/

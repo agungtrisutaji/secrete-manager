@@ -36,3 +36,48 @@ export function generateSalt(): Uint8Array {
 export function generateIV(): Uint8Array {
   return randomBytes(IV_LENGTH);
 }
+
+/**
+ * Derive a cryptographic key from a password using PBKDF2.
+ * 
+ * Note: Argon2id is preferred but not yet widely available in WebCrypto.
+ * Consider using argon2-browser library for sensitive applications.
+ */
+export async function deriveKey(
+  password: string,
+  salt: Uint8Array,
+  iterations: number = PBKDF2_ITERATIONS
+): Promise<CryptoKey> {
+  const encoder = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(password) as BufferSource,
+    "PBKDF2",
+    false,
+    ["deriveBits", "deriveKey"]
+  );
+
+  return crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: salt as BufferSource,
+      iterations,
+      hash: "SHA-256",
+    },
+    keyMaterial,
+    { name: "AES-GCM", length: KEY_LENGTH },
+    true, // extractable for export
+    ["encrypt", "decrypt", "wrapKey", "unwrapKey"]
+  );
+}
+
+/**
+ * Generate a new random AES-256 key for vault or item encryption.
+ */
+export async function generateKey(): Promise<CryptoKey> {
+  return crypto.subtle.generateKey(
+    { name: "AES-GCM", length: KEY_LENGTH },
+    true,
+    ["encrypt", "decrypt"]
+  );
+}

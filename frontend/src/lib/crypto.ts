@@ -81,3 +81,78 @@ export async function generateKey(): Promise<CryptoKey> {
     ["encrypt", "decrypt"]
   );
 }
+
+/**
+ * Encrypt data using AES-256-GCM.
+ * 
+ * @param key - The encryption key
+ * @param plaintext - Data to encrypt (string or Uint8Array)
+ * @param aad - Additional Authenticated Data (optional but recommended)
+ * @returns Object containing iv, ciphertext, and tag (combined in ciphertext)
+ */
+export async function encrypt(
+  key: CryptoKey,
+  plaintext: string | Uint8Array,
+  aad?: Uint8Array
+): Promise<{ iv: Uint8Array; ciphertext: Uint8Array }> {
+  const iv = generateIV();
+  const encoder = new TextEncoder();
+  const data = typeof plaintext === "string" ? encoder.encode(plaintext) : plaintext;
+
+  const ciphertext = await crypto.subtle.encrypt(
+    {
+      name: "AES-GCM",
+      iv: iv as BufferSource,
+      additionalData: aad as BufferSource | undefined,
+    },
+    key,
+    data as BufferSource
+  );
+
+  return {
+    iv,
+    ciphertext: new Uint8Array(ciphertext),
+  };
+}
+
+/**
+ * Decrypt data encrypted with AES-256-GCM.
+ * 
+ * @param key - The decryption key
+ * @param iv - Initialization vector used for encryption
+ * @param ciphertext - Encrypted data
+ * @param aad - Additional Authenticated Data (must match encryption)
+ * @returns Decrypted plaintext as Uint8Array
+ */
+export async function decrypt(
+  key: CryptoKey,
+  iv: Uint8Array,
+  ciphertext: Uint8Array,
+  aad?: Uint8Array
+): Promise<Uint8Array> {
+  const plaintext = await crypto.subtle.decrypt(
+    {
+      name: "AES-GCM",
+      iv: iv as BufferSource,
+      additionalData: aad as BufferSource | undefined,
+    },
+    key,
+    ciphertext as BufferSource
+  );
+
+  return new Uint8Array(plaintext);
+}
+
+/**
+ * Decrypt and return as string (UTF-8).
+ */
+export async function decryptToString(
+  key: CryptoKey,
+  iv: Uint8Array,
+  ciphertext: Uint8Array,
+  aad?: Uint8Array
+): Promise<string> {
+  const plaintext = await decrypt(key, iv, ciphertext, aad);
+  const decoder = new TextDecoder();
+  return decoder.decode(plaintext);
+}

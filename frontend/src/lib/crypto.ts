@@ -156,3 +156,69 @@ export async function decryptToString(
   const decoder = new TextDecoder();
   return decoder.decode(plaintext);
 }
+
+/**
+ * Wrap (encrypt) a key using another key.
+ * Used for envelope encryption: MasterKey wraps VaultKey, VaultKey wraps ItemKey.
+ */
+export async function wrapKey(
+  keyToWrap: CryptoKey,
+  wrappingKey: CryptoKey
+): Promise<{ iv: Uint8Array; wrappedKey: Uint8Array }> {
+  const iv = generateIV();
+  const wrappedKey = await crypto.subtle.wrapKey(
+    "raw",
+    keyToWrap,
+    wrappingKey,
+    { name: "AES-GCM", iv: iv as BufferSource }
+  );
+
+  return {
+    iv,
+    wrappedKey: new Uint8Array(wrappedKey),
+  };
+}
+
+/**
+ * Unwrap (decrypt) a key using another key.
+ */
+export async function unwrapKey(
+  wrappedKey: Uint8Array,
+  iv: Uint8Array,
+  unwrappingKey: CryptoKey,
+  extractable: boolean = true
+): Promise<CryptoKey> {
+  return crypto.subtle.unwrapKey(
+    "raw",
+    wrappedKey as BufferSource,
+    unwrappingKey,
+    { name: "AES-GCM", iv: iv as BufferSource },
+    { name: "AES-GCM", length: KEY_LENGTH },
+    extractable,
+    ["encrypt", "decrypt"]
+  );
+}
+
+/**
+ * Export a CryptoKey to raw bytes.
+ */
+export async function exportKey(key: CryptoKey): Promise<Uint8Array> {
+  const exported = await crypto.subtle.exportKey("raw", key);
+  return new Uint8Array(exported);
+}
+
+/**
+ * Import raw bytes as a CryptoKey.
+ */
+export async function importKey(
+  keyBytes: Uint8Array,
+  extractable: boolean = true
+): Promise<CryptoKey> {
+  return crypto.subtle.importKey(
+    "raw",
+    keyBytes as BufferSource,
+    { name: "AES-GCM" },
+    extractable,
+    ["encrypt", "decrypt"]
+  );
+}

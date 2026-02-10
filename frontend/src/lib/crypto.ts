@@ -222,3 +222,91 @@ export async function importKey(
     ["encrypt", "decrypt"]
   );
 }
+
+// ============================================================
+// Encoding utilities
+// ============================================================
+
+/**
+ * Encode bytes to base64 string.
+ */
+export function toBase64(bytes: Uint8Array): string {
+  return btoa(String.fromCharCode(...bytes));
+}
+
+/**
+ * Decode base64 string to bytes.
+ */
+export function fromBase64(base64: string): Uint8Array {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+/**
+ * Encode bytes to URL-safe base64 string.
+ */
+export function toBase64Url(bytes: Uint8Array): string {
+  return toBase64(bytes).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+}
+
+/**
+ * Decode URL-safe base64 string to bytes.
+ */
+export function fromBase64Url(base64url: string): Uint8Array {
+  let base64 = base64url.replace(/-/g, "+").replace(/_/g, "/");
+  while (base64.length % 4) {
+    base64 += "=";
+  }
+  return fromBase64(base64);
+}
+
+/**
+ * Concatenate multiple Uint8Arrays.
+ */
+export function concatBytes(...arrays: Uint8Array[]): Uint8Array {
+  const totalLength = arrays.reduce((sum, arr) => sum + arr.length, 0);
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const arr of arrays) {
+    result.set(arr, offset);
+    offset += arr.length;
+  }
+  return result;
+}
+
+// ============================================================
+// High-level encryption helpers
+// ============================================================
+
+/**
+ * Complete encryption flow: encrypt data and return as base64-encoded package.
+ */
+export async function encryptToPackage(
+  key: CryptoKey,
+  plaintext: string,
+  aad?: Uint8Array
+): Promise<{ encrypted: string; iv: string; aad?: string }> {
+  const { iv, ciphertext } = await encrypt(key, plaintext, aad);
+  return {
+    encrypted: toBase64(ciphertext),
+    iv: toBase64(iv),
+    aad: aad ? toBase64(aad) : undefined,
+  };
+}
+
+/**
+ * Complete decryption flow: decode base64 package and decrypt.
+ */
+export async function decryptFromPackage(
+  key: CryptoKey,
+  encrypted: string,
+  iv: string,
+  aadBase64?: string
+): Promise<string> {
+  const aad = aadBase64 ? fromBase64(aadBase64) : undefined;
+  return decryptToString(key, fromBase64(iv), fromBase64(encrypted), aad);
+}

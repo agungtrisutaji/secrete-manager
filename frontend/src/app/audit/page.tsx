@@ -48,15 +48,49 @@ function AuditContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
-  
-  // Filters state placeholders
   const [actionFilter, setActionFilter] = useState('');
   const [resourceFilter, setResourceFilter] = useState('');
   const [page, setPage] = useState(1);
+  const [actions, setActions] = useState<{ value: string; name: string }[]>([]);
+
+  const getToken = () => {
+    if (typeof window !== 'undefined') return localStorage.getItem('access_token');
+    return null;
+  };
+
+  useEffect(() => { fetchActions(); }, []);
+  useEffect(() => { fetchLogs(); }, [page, actionFilter, resourceFilter]);
+
+  const fetchActions = async () => {
+    const token = getToken();
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_URL}/audit/actions`, { headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) { const data = await res.json(); setActions(data.actions); }
+    } catch {}
+  };
+
+  const fetchLogs = async () => {
+    const token = getToken();
+    if (!token) { router.push('/login'); return; }
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.set('page', page.toString());
+      params.set('per_page', '25');
+      if (actionFilter) params.set('action', actionFilter);
+      if (resourceFilter) params.set('resource_type', resourceFilter);
+      const res = await fetch(`${API_URL}/audit/logs?${params.toString()}`, { headers: { Authorization: `Bearer ${token}` } });
+      if (res.status === 401) { router.push('/login'); return; }
+      if (res.ok) { const data = await res.json(); setLogs(data.data); setPagination(data.pagination); }
+      else setError('Failed to load audit logs');
+    } catch { setError('Failed to load audit logs'); }
+    finally { setLoading(false); }
+  };
 
   return (
     <div className="p-6">
-       <div className="text-white">Audit Logs Placeholder</div>
+       <div className="text-white">Loading... {loading ? 'Yes' : 'No'}</div>
     </div>
   );
 }
